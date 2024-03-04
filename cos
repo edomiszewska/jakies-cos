@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formularz opinii</title>
+</head>
+<body>
+
+<h1>Formularz opinii</h1>
+
+<!-- Formularz do wprowadzania opinii -->
+<form method="post" action="submit_opinion.php">
+    <label for="nickname">Twój nick:</label><br>
+    <input type="text" id="nickname" name="nickname"><br>
+    <label for="opinion">Twoja opinia:</label><br>
+    <textarea id="opinion" name="opinion" rows="4" cols="50"></textarea><br>
+    <input type="submit" value="Wyślij opinię">
+</form>
+
+<hr>
+
+<h2>Opinie użytkowników:</h2>
+
+<?php
+
+$opinions_file = 'opinions.txt';
+
+if(file_exists($opinions_file)) {
+    $opinions = file($opinions_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if(!empty($opinions)) {
+        foreach($opinions as $opinion) {
+            $opinion_data = explode('|', $opinion);
+            if(count($opinion_data) == 3) {
+                $nickname = $opinion_data[0];
+                $opinion_text = $opinion_data[1];
+                $opinion_date = $opinion_data[2];
+                echo "<p><strong>Nick, Opinia, Data:</strong> $nickname, $opinion_text, $opinion_date</p>";
+            }
+        }
+    } else {
+        echo "<p>Brak opinii do wyświetlenia.</p>";
+    }
+} else {
+    echo "<p>Nie można odczytać pliku z opiniami.</p>";
+}
+?>
+
+
+</body>
+</html>
+
+
+
+
+
+2plik:
+<?php
+if($_SERVER["REQUEST_METHOD"] == "POST") {
+    $nickname = $_POST['nickname'];
+    $opinion = $_POST['opinion'];
+    $nickname = strip_tags($nickname); // Usuwanie tagów HTML z nicku
+    $opinion = strip_tags($opinion); // Usuwanie tagów HTML z opinii
+    $nickname = str_replace('|', '', $nickname); // Usuwanie znaku pionowej kreski z nicku
+    $opinion = str_replace('|', '', $opinion); // Usuwanie znaku pionowej kreski z opinii
+
+    $opinions_file = 'opinions.txt';
+    $current_date = date("Y-m-d H:i:s");
+
+    // Dodawanie nowej opinii do pliku w formacie: nick|opinia|data
+    $new_opinion = "$nickname|$opinion|$current_date\n";
+    file_put_contents($opinions_file, $new_opinion, FILE_APPEND | LOCK_EX);
+
+    // Przekierowanie z powrotem na stronę główną
+    header("Location: index.php");
+    exit();
+}
+?>
